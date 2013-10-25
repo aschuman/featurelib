@@ -1,3 +1,23 @@
 
 FeatureLib v0.0 beta
 
+C++ compile guide:
+- start CMake
+	- set "featurelib" folder as source path in CMake
+	- select path were the compiled files should be created
+	- press "Configure"
+	- select desired compiler, recommendation is "Visual Studio"
+	- press "Generate"
+- open "FeatureLib.sln" in Visual Studio, it is located in the selected output folder of CMake
+- compiled library is in "lib" folder, example applications are in "bin" folder
+
+
+Matlab compile guide:
+- start CMake
+	- set "featurelib" folder as source path in CMake
+	- select path were the compiled files should be created
+	- press "Configure"
+	- select the checkbox at MATLAB_BUILD
+	- press "Configure"
+- run "matlab_compile.bat", it is located in the selected output folder of CMake
+- compiled files are in "mex" folder

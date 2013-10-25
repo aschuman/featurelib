@@ -5,6 +5,12 @@
 
 #include <opencv2/opencv.hpp>
 
+#include <build_matlab.h>
+#ifdef HAVE_MATLAB
+	#include "mex.h"
+	#include "class_handle.h"
+#endif
+
 
 
 
@@ -46,11 +52,6 @@ public:
     virtual OutputType getFeature() const;
     virtual void setParameters(const FeatureParameters& params);
     virtual FeatureParameters getParameters() const;
-
-#ifdef HAVE_MATLAB
-    virtual void mexFunction(int nlhs, mxArray* plhs[],
-                             int nrhs, const mxArray* prhs[]) = 0;
-#endif
 
 protected:
     // remove those, make below stuff protected
