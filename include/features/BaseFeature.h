@@ -36,7 +36,7 @@ public:
 
 public:
     BaseFeature();
-    // constructor with params
+    BaseFeature(const FeatureParameters& p);
     virtual ~BaseFeature();
 
     // warp this into computeandkeep
@@ -71,6 +71,14 @@ private:
 template <class FP_T, typename OT_T>
 BaseFeature<FP_T, OT_T>::BaseFeature()
 {}
+
+
+
+template <class FP_T, typename OT_T>
+BaseFeature<FP_T, OT_T>::BaseFeature(const FP_T& p)
+{
+    setParameters(p);
+}
 
 
 
