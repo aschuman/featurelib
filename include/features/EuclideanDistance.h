@@ -4,44 +4,47 @@
 #include "Distance.h"
 
 #include <cassert>
+#include <vector>
 
 
 
 
-// fix the std::vector here
-template <typename V_T>
-class EuclideanDistance : public Distance<V_T>
+
+//TODO: also here add static asserts to limit S_T to number types
+template <typename S_T>
+class EuclideanDistance : public Distance<std::vector<S_T> >
 {
 public:
-    typedef V_T   VecType;
+    typedef S_T   ScalarType;
 
 public:
     EuclideanDistance();
     virtual ~EuclideanDistance();
 
-    virtual double compute(const VecType& f1, const VecType& f2) const;
+    virtual double compute(const std::vector<ScalarType>& f1,
+                           const std::vector<ScalarType>& f2) const;
 };
 
 
 
 
 
-template <typename V_T>
-EuclideanDistance<V_T>::EuclideanDistance()
+template <typename S_T>
+EuclideanDistance<S_T>::EuclideanDistance()
 {}
 
 
 
 
-template <typename V_T>
-EuclideanDistance<V_T>::~EuclideanDistance()
+template <typename S_T>
+EuclideanDistance<S_T>::~EuclideanDistance()
 {}
 
 
 
-template <typename V_T>
-double EuclideanDistance<V_T>::compute(const V_T& f1,
-                                       const V_T& f2) const
+template <typename S_T>
+double EuclideanDistance<S_T>::compute(const std::vector<ScalarType>& f1,
+                                       const std::vector<ScalarType>& f2) const
 {
     assert(f1.size() == f2.size());
 
