@@ -11,7 +11,10 @@ using namespace std;
 
 
 GrayValueHistogram::GrayValueHistogram()
-{}
+{
+    dist_ = new EuclideanDistance<vector<double> >();
+
+}
 
 
 
@@ -55,7 +58,7 @@ GrayValueHistogram::OutputType GrayValueHistogram::compute(const cv::Mat &img)
 double GrayValueHistogram::distance(const OutputType &f1,
                                     const OutputType &f2) const
 {
-    EuclideanDistance<double> d;
+    EuclideanDistance<vector<double> > d;
     return d.compute(f1, f2);
 }
 
