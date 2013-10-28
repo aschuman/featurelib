@@ -1,19 +1,19 @@
-#ifndef EUCLIDEANDIST_H
-#define EUCLIDEANDIST_H
+#ifndef EUCLIDEANDISTANCE_H
+#define EUCLIDEANDISTANCE_H
 
-#include "BaseDistance.h"
+#include "Distance.h"
 
 #include <cassert>
 
 
 
 
-
-template <typename VecType_T>
-class EuclideanDistance : public BaseDistance<VecType_T>
+// fix the std::vector here
+template <typename V_T>
+class EuclideanDistance : public Distance<V_T>
 {
 public:
-    typedef VecType_T   VecType;
+    typedef V_T   VecType;
 
 public:
     EuclideanDistance();

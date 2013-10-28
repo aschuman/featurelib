@@ -1,16 +1,20 @@
 #ifndef GRAYVALUEHISTOGRAM_H
 #define GRAYVALUEHISTOGRAM_H
 
-#include "BaseFeature.h"
+#include "ImageFeature.h"
 #include "EuclideanDistance.h"
 
 
 
 
 
-struct GVHParameters : public BaseFeatureParams
+struct GVHParameters : public FeatureParameters
 {
+    GVHParameters()
+        : normalize(false)
+    {}
 
+    bool normalize;
 };
 
 
@@ -18,10 +22,10 @@ struct GVHParameters : public BaseFeatureParams
 
 
 class GrayValueHistogram
-        : public BaseFeature<GVHParameters, std::vector<double> >
+        : public ImageFeature<GVHParameters, std::vector<double> >
 {
 public:
-    typedef BaseFeature<GVHParameters, std::vector<double> > base_type;
+    typedef ImageFeature<GVHParameters, std::vector<double> > BaseType;
 
 public:
     GrayValueHistogram();

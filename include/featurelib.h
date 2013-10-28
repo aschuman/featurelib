@@ -1,3 +1,2 @@
-#include "features/BaseFeature.h"
+#include "features/ImageFeature.h"
 #include "features/GrayValueHistogram.h"
-
