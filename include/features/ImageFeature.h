@@ -2,6 +2,7 @@
 #define BASEFEATURE_H
 
 #include "Distance.h"
+#include "EuclideanDistance.h"
 #include "build_matlab.h"
 #ifdef HAVE_MATLAB
     #include <mex.h>
@@ -54,6 +55,7 @@ public:
 protected:
     OutputType feature_buffer_;
     Parameters parameters_;
+    Distance<OutputType>* dist_;
 };
 
 
@@ -62,9 +64,8 @@ protected:
 
 template <class FP_T, typename O_T>
 ImageFeature<FP_T, O_T>::ImageFeature()
+    : dist_(NULL)
 {}
-
-
 
 template <class FP_T, typename O_T>
 ImageFeature<FP_T, O_T>::ImageFeature(const FP_T& p)
@@ -76,7 +77,9 @@ ImageFeature<FP_T, O_T>::ImageFeature(const FP_T& p)
 
 template <class FP_T, typename O_T>
 ImageFeature<FP_T, O_T>::~ImageFeature()
-{}
+{
+    if (dist_ != NULL) delete dist_;
+}
 
 
 
