@@ -1,5 +1,7 @@
 #include "features/GrayValueHistogram.h"
 
+#include <fstream>
+
 typedef unsigned char uchar;
 
 using namespace std;
@@ -61,16 +63,44 @@ double GrayValueHistogram::distance(const OutputType &f1,
 
 bool GrayValueHistogram::writeToFile(const string &fname) const
 {
-    cout << "writing..." << endl;
-	return false;
+    ofstream ofs(fname.c_str());
+    if (!ofs.is_open())
+    {
+        cerr << "could not open file for writing..." << endl;
+        return false;
+    }
+
+    ofs << feature_buffer_.size() << " ";
+    for (size_t ii = 0; ii < feature_buffer_.size(); ++ii)
+    {
+        ofs << feature_buffer_[ii] << " ";
+    }
+    ofs << endl;
+    ofs.close();
+    return true;
 }
 
 
 
 bool GrayValueHistogram::readFromFile(const string &fname)
 {
-    cout << "reading..." << endl;
-	return false;
+    ifstream ifs(fname.c_str());
+    if (!ifs.is_open())
+    {
+        cerr << "could not open file for reading..." << endl;
+        return false;
+    }
+
+    size_t s = 0;
+    ifs >> s;
+    feature_buffer_.resize(s, 0);
+
+    for (size_t ii = 0; ii < feature_buffer_.size(); ++ii)
+    {
+        ifs >> feature_buffer_[ii];
+    }
+    ifs.close();
+    return true;
 }
 
 

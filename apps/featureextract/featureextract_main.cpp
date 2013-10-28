@@ -19,14 +19,14 @@ int main(int argc, char* argv[])
 
     string imgname = argv[1];
     cv::Mat img = cv::imread(imgname);
-    //cv::Mat img2 = cv::imread("../data/lena.bmp");
 
     GrayValueHistogram gvh;
     gvh.compute(img);
-    //GrayValueHistogram gvh2;
-    //gvh2.compute(img2);
+    gvh.writeToFile("./tmp.txt");
+    GrayValueHistogram gvh2;
+    gvh2.readFromFile("./tmp.txt");
 
-    cout << "dist is " << gvh.distance(gvh.getFeature(), gvh.getFeature())
+    cout << "dist is " << gvh.distance(gvh.getFeature(), gvh2.getFeature())
             << endl;
 
     cv::imshow("testwin", img);

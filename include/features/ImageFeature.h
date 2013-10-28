@@ -48,14 +48,12 @@ public:
     virtual bool readFromFile(const std::string& fname) = 0;
 
     virtual OutputType getFeature() const;
-    // check that correct distance is used (can/should that be done in basefeatureparams?)
     virtual void       setParameters(const Parameters& params);
     virtual Parameters getParameters() const;
 
 protected:
     OutputType feature_buffer_;
     Parameters parameters_;
-    // basedistance
 };
 
 
@@ -93,8 +91,8 @@ O_T ImageFeature<FP_T, O_T>::getFeature() const
 template <class FP_T, typename O_T>
 void ImageFeature<FP_T, O_T>::setParameters(const FP_T& params)
 {
-    //TODO: using c++11 there should be a static assert here that checks
-    //      the base class of Parameters to be FeatureParameters
+    //TODO: check that params has the right base class (boost?)
+    //TODO: check that the distance in params has corrent O_T
     parameters_ = params;
 }
 
