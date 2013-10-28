@@ -36,16 +36,16 @@ GrayValueHistogram::OutputType GrayValueHistogram::compute(const cv::Mat &img)
 		cv::cvtColor(img_byte, img_gray, CV_RGB2GRAY);
 	} 
 
-    featureBuffer().resize(256, 0.0);
+    feature_buffer_.resize(256, 0.0);
     for (int ii = 0; ii < img_gray.rows; ++ii)
     {
         for (int jj = 0; jj < img_gray.cols; ++jj)
         {
-            ++featureBuffer()[(int)img_gray.at<uchar>(ii,jj)];
+            ++feature_buffer_[(int)img_gray.at<uchar>(ii,jj)];
         }
     }
 
-    return featureBuffer();
+    return feature_buffer_;
 }
 
 

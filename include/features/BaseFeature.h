@@ -54,11 +54,6 @@ public:
     virtual FeatureParameters getParameters() const;
 
 protected:
-    // remove those, make below stuff protected
-    OutputType& featureBuffer();
-    FeatureParameters& parameters();
-
-private:
     OutputType feature_buffer_;
     FeatureParameters parameters_;
     // basedistance
@@ -108,22 +103,6 @@ void BaseFeature<FP_T, OT_T>::setParameters(const FP_T& params)
 
 template <class FP_T, typename OT_T>
 FP_T BaseFeature<FP_T, OT_T>::getParameters() const
-{
-    return parameters_;
-}
-
-
-
-template <class FP_T, typename OT_T>
-OT_T& BaseFeature<FP_T, OT_T>::featureBuffer()
-{
-    return feature_buffer_;
-}
-
-
-
-template <class FP_T, typename OT_T>
-FP_T& BaseFeature<FP_T, OT_T>::parameters()
 {
     return parameters_;
 }
