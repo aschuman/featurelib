@@ -20,6 +20,7 @@ mark_as_advanced(LIBRARY_OUTPUT_PATH EXECUTABLE_OUTPUT_PATH)
 include_directories("${CMAKE_SOURCE_DIR}/include")
 add_subdirectory(src)
 add_subdirectory(apps)
+add_subdirectory(data)
 
 
 ##############################
