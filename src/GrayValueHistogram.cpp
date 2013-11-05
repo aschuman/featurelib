@@ -58,8 +58,7 @@ GrayValueHistogram::OutputType GrayValueHistogram::compute(const cv::Mat &img)
 double GrayValueHistogram::distance(const OutputType &f1,
                                     const OutputType &f2) const
 {
-    EuclideanDistance<vector<double> > d;
-    return d.compute(f1, f2);
+    return dist_->compute(f1, f2);
 }
 
 
