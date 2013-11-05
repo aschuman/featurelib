@@ -31,7 +31,7 @@ function [] = featureextract(imagePath1, imagePath2)
     
     % get feature distance
     distance = gvh.distance(feature1, feature2);
-    fprintf(1, 'Feature distance is %f', distance);
+    fprintf(1, 'Feature distance is %f\n', distance);
     
     % TODO: remove path does not work
     % remove mex path from Matlab path

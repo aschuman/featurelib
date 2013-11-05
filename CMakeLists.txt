@@ -28,6 +28,11 @@ add_subdirectory(data)
 ##############################
 option(MATLAB_BUILD "Select if library should be compiled for MATLAB usage" OFF)
 if(MATLAB_BUILD)
+	# requirement: mexopencv (see https://github.com/kyamagu/mexopencv)
+	set(MEXOPENCV_PATH ${CMAKE_SOURCE_DIR}/3rdparty/mexopencv)
+	
+	#message(STATUS "${INCLUDE_DIRECTORIES}")
+	
 	# add definition
 	file(WRITE ${CMAKE_SOURCE_DIR}/include/build_matlab.h "#define HAVE_MATLAB")
 	
@@ -38,12 +43,12 @@ if(MATLAB_BUILD)
 		string(REPLACE ";" " -I" MATLAB_OpenCV_INCLUDE_DIRS "${OpenCV_INCLUDE_DIRS}")
 		string(REPLACE ";" "/*.lib " MATLAB_OpenCV_LIB_DIR "${OpenCV_LIB_DIR}")
 		
-		file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/matlab_compile.bat  "@echo off\nrem Automatically generated build file for MATLAB. Execute to build mex files. Do not modify.\n\n")
+		file(WRITE  ${CMAKE_CURRENT_BINARY_DIR}/matlab_compile.bat "@echo off\nrem Automatically generated build file for MATLAB. Execute to build mex files. Do not modify.\n\n")
 		file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/matlab_compile.bat "set flibpath=${CMAKE_SOURCE_DIR}\n")
 		file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/matlab_compile.bat "set outputpath=${MATLAB_OUTPUT_PATH}\n\n")
 		file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/matlab_compile.bat "for /R %flibpath%/src/ %%f in (*.cpp) do (\n")
 		file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/matlab_compile.bat "    echo Compile %%~nxf\n")
-		file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/matlab_compile.bat "	mex %%f -I%flibpath%/include/ -I%flibpath%/include/features/ -I${MATLAB_OpenCV_INCLUDE_DIRS} ${MATLAB_OpenCV_LIB_DIR}/*.lib -outdir %outputpath% -output %%~nfMex\n)")		
+		file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/matlab_compile.bat "	mex %%f ${MEXOPENCV_PATH}/src/*.cpp -I%flibpath%/include/ -I%flibpath%/include/features/ -I${MEXOPENCV_PATH}/include -I${MATLAB_OpenCV_INCLUDE_DIRS} ${MATLAB_OpenCV_LIB_DIR}/*.lib -outdir %outputpath% -output %%~nfMex\n)")		
 	endif()
 	
 	# TODO: Linux - build shell script to call mex compiler similar to windows batch file

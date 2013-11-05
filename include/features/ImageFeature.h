@@ -6,6 +6,7 @@
 #include "build_matlab.h"
 #ifdef HAVE_MATLAB
     #include <mex.h>
+	#include "mexopencv.hpp"
     #include "class_handle.h"
 #endif
 

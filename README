@@ -1,12 +1,17 @@
 
 FeatureLib v0.0 beta
 
+Requirements:
+- OpenCV
+- C++ compiler
+
+
 C++ compile guide:
 - start CMake
 	- set "featurelib" folder as source path in CMake
 	- select path were the compiled files should be created
 	- press "Configure"
-	- select desired compiler, recommendation is "Visual Studio"
+	- select desired compiler, recommendation for Windows is "Visual Studio"
 	- press "Generate"
 - open "FeatureLib.sln" in Visual Studio, it is located in the selected output folder of CMake
 - compiled library is in "lib" folder, example applications are in "bin" folder

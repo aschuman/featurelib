@@ -32,11 +32,19 @@ classdef BaseFeature < handle
         
         % Write to file
         function varargout = writeToFile(this, varargin)
+            path = varargin{3};
+            path = strrep(path,'\',filesep);
+            path = strrep(path,'/',filesep);
+            varargin{3} = path;
             [varargout{1:nargout}] = BaseFeatureMex('writeToFile', this.objectHandle, varargin{:});
         end
         
         % Read from file
         function varargout = readFromFile(this, varargin)
+            path = varargin{3};
+            path = strrep(path,'\',filesep);
+            path = strrep(path,'/',filesep);
+            varargin{3} = path;
             [varargout{1:nargout}] = BaseFeatureMex('readFromFile', this.objectHandle, varargin{:});
         end
     end

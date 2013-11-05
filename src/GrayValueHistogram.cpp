@@ -109,10 +109,13 @@ bool GrayValueHistogram::readFromFile(const string &fname)
 
 
 #ifdef HAVE_MATLAB
-// parameters: input:
-//				input[0]: string which specifies the desired method 
-//				input[1]: object handle
-//				input[2..n]: method parameters
+/** Interface function for Matlab access.
+ * @param classid data type of matlab's mxArray. e.g., mxDOUBLE_CLASS.
+ * @param nOutput number of output arguments
+ * @param output pointers to output mxArrays
+ * @param nInput number of input arguments
+ * @param input pointers to input mxArrays - input[0]: string which specifies the desired method - input[1]: object handle - input[2..n]: method input parameters			
+ */
 void mexFunction(int nOutput, mxArray* output[], int nInput, const mxArray* input[]) {
 	 
 	//// Get the command string
@@ -152,49 +155,20 @@ void mexFunction(int nOutput, mxArray* output[], int nInput, const mxArray* inpu
     // Compute    
     if (!strcmp("compute", cmd)) {
         //// Check parameters
-        if (nOutput < 1 || nInput < 3) {
-            mexErrMsgTxt("compute: Unexpected arguments.");
+        if (nOutput > 1 || nInput != 3) {
+            mexErrMsgTxt("compute: Wrong number of arguments");
 		}		
 		
-		//// prepare method parameters, conversion from matlab datatypes to c++ datatypes
-		// Check if the input image is in double format
-		if (!(mxIsDouble(input[2]))) {
-		    mexErrMsgTxt("Input image must be gray scale and of type double");
-		}
-		
-		// Copy input pointer 
-		// This carries the input grayscale image that was sent from Matlab
-		mxArray* xData = (mxArray *)input[2];
-
-		//Get the matrix from the input data
-		// The matrix is rasterized in a column wise read
-		double* xValues =  mxGetPr(xData);
-		int nCols = mxGetN(xData); // Gives the number of Columns in the image
-		int nRows = mxGetM(xData); // Gives the number of Rows in the image
-		
-		/* Get the number of dimensions in the input Image */
-		int number_of_dims = mxGetNumberOfDimensions(input[2]);
-		if (number_of_dims > 2)
-			mexErrMsgTxt("Input image should be gray scale and of type double");
-		
-		// Create a cv::Mat from the data so feature evaluation can be run on it
-		cv::Mat grayMat(nRows, nCols, CV_8UC1);
-		
-		// Load the column wise vector into the Mat
-		// Mat data is read in a rowwise manner
-		// Appropriate conversion is carried out here
-		for(int i=0;i<nCols;i++) {
-		   for(int j=0;j<nRows;j++)
-			{
-				int value = xValues[(i*nRows)+j];
-				grayMat.at<uchar>(j,i) = value;
-			}
-		}				
+		//// prepare method parameters, conversion from Matlab datatypes to C++ datatypes
+		// argument vector
+		vector<MxArray> args(input, input + nInput);		
+		// convert Matlab image to OpenCV image
+		cv::Mat image(args[2].toMat());
 			
         //// Call the method
-        GrayValueHistogram::OutputType feature = GrayValueHistogram_instance->compute(grayMat);	
+        GrayValueHistogram::OutputType feature = GrayValueHistogram_instance->compute(image);	
 		
-		//// process method results, conversion from c++ datatypes to matlab datatypes		
+		//// process method results, conversion from C++ datatypes to Matlab datatypes		
         output[0] = mxCreateDoubleMatrix(1, feature.size(), mxREAL);
         double* dataPtr = mxGetPr(output[0]); // Get the pointer to output variable
 		memcpy(dataPtr, feature.data(), sizeof(double)*feature.size());		
@@ -204,7 +178,7 @@ void mexFunction(int nOutput, mxArray* output[], int nInput, const mxArray* inpu
     // Distance    
     if (!strcmp("distance", cmd)) {
         //// Check parameters
-        if (nOutput < 1 || nInput < 4) {
+        if (nOutput > 1 || nInput != 4) {
             mexErrMsgTxt("distance: Unexpected arguments.");
 		}
 		
@@ -246,6 +220,60 @@ void mexFunction(int nOutput, mxArray* output[], int nInput, const mxArray* inpu
         output[0] = mxCreateDoubleMatrix(1, 1, mxREAL);
         double* dataPtr = mxGetPr(output[0]); // Get the pointer to output variable
 		*dataPtr = distance;
+		
+        return;
+    }
+	// Write to file
+    if (!strcmp("writeToFile", cmd)) {
+        //// Check parameters
+        if (nOutput > 1 || nInput != 3) {
+            mexErrMsgTxt("writeToFile: Wrong number of arguments");
+		}
+		
+		//// Get the file path string
+		char* path = mxArrayToString(input[2]);
+		if (path == NULL) {
+			mexErrMsgTxt("writeToFile: Conversion of file name string failed.");
+		}
+					
+        //// Call the method
+        bool successful = GrayValueHistogram_instance->writeToFile(path);			
+		
+		//// convert results, conversion from C++ datatypes to Matlab datatypes		
+		int dims[2] = {1,1};
+        output[0] = mxCreateNumericArray(2, dims, mxLOGICAL_CLASS, mxREAL);
+        bool* dataPtr = (bool*)mxGetData(output[0]); // Get the pointer to output variable
+		*dataPtr = successful;	
+		
+		// cleanup
+		mxFree(path);
+		
+        return;
+    }
+	// Read from file
+    if (!strcmp("readFromFile", cmd)) {
+        //// Check parameters
+        if (nOutput > 1 || nInput != 3) {
+            mexErrMsgTxt("readFromFile: Wrong number of arguments");
+		}
+		
+		//// Get the file path string
+		char* path = mxArrayToString(input[2]);
+		if (path == NULL) {
+			mexErrMsgTxt("readFromFile: Conversion of file name string failed.");
+		}
+					
+        //// Call the method
+        bool successful = GrayValueHistogram_instance->readFromFile(path);			
+		
+		//// convert results, conversion from C++ datatypes to Matlab datatypes		
+		int dims[2] = {1,1};
+        output[0] = mxCreateNumericArray(2, dims, mxLOGICAL_CLASS, mxREAL);
+        bool* dataPtr = (bool*)mxGetData(output[0]); // Get the pointer to output variable
+		*dataPtr = successful;	
+		
+		// cleanup
+		mxFree(path);
 		
         return;
     }
