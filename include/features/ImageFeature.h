@@ -49,14 +49,15 @@ public:
     virtual bool writeToFile(const std::string& fname) const = 0;
     virtual bool readFromFile(const std::string& fname) = 0;
 
-    virtual OutputType getFeature() const;
-    virtual void       setParameters(const Parameters& params);
+	virtual OutputType getFeature() const;
+	virtual void       setDistance(const Distance<OutputType>& dist);
+	virtual void       setParameters(const Parameters& params);
     virtual Parameters getParameters() const;
 
 protected:
     OutputType feature_buffer_;
     Parameters parameters_;
-    Distance<OutputType>* dist_;
+	const Distance<OutputType>* dist_;	// constant distance, pointer is not constant
 };
 
 
@@ -93,11 +94,18 @@ O_T ImageFeature<FP_T, O_T>::getFeature() const
 
 
 template <class FP_T, typename O_T>
+void ImageFeature<FP_T, O_T>::setDistance(const Distance<O_T>& dist)
+{
+	//TODO: check that the distance in has corrent O_T
+	dist_ = &dist;
+}
+
+
+template <class FP_T, typename O_T>
 void ImageFeature<FP_T, O_T>::setParameters(const FP_T& params)
 {
-    //TODO: check that params has the right base class (boost?)
-    //TODO: check that the distance in params has corrent O_T
-    parameters_ = params;
+	//TODO: check that params has the right base class (boost?)
+	parameters_ = params;
 }
 
 

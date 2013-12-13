@@ -13,7 +13,6 @@ using namespace std;
 GrayValueHistogram::GrayValueHistogram()
 {
     dist_ = new EuclideanDistance<vector<double> >();
-
 }
 
 

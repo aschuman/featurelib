@@ -11,13 +11,15 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
+	string imgname;
     if (argc < 2)
-    {
-        cerr << "Usage: " << argv[0] << " imagename" << endl;
-        exit(1);
-    }
-
-    string imgname = argv[1];
+	{
+		cout << "Usage: " << argv[0] << " imagename" << endl;		
+		cout << "No imagename found, using default image instead." << endl;		
+		imgname = "../../data/lena.bmp";
+    } else {
+		imgname = argv[1];
+	}
     cv::Mat img = cv::imread(imgname);
 
     GrayValueHistogram gvh;
