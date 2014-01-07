@@ -1,61 +1,93 @@
-#include "features/GrayValueHistogram.h"
+#include "features/ModCensusPattern.h"
 
-#include <fstream>
+
 
 typedef unsigned char uchar;
 
 using namespace std;
+using namespace cv;
 
 
-
-
-
-GrayValueHistogram::GrayValueHistogram()
+ModCensusPattern::ModCensusPattern() 
 {
     dist_ = new EuclideanDistance<vector<double> >();
+
 }
 
 
-
-GrayValueHistogram::~GrayValueHistogram()
+ModCensusPattern::~ModCensusPattern()
 {}
 
 
-
-GrayValueHistogram::OutputType GrayValueHistogram::compute(const cv::Mat &img)
+ModCensusPattern::OutputType ModCensusPattern::compute(const cv::Mat &img)
 {
+	
 	// adjust data type
-	cv::Mat img_byte;
-	if (img.depth() != CV_8U) {
-		img.convertTo(img_byte, CV_8U);
+	Mat img_byte;
+	if (img.depth() != CV_32F) {
+		img.convertTo(img_byte, CV_32F);
 	} else {
 		img_byte = img;
 	}
-
 	// adjust color space
-	cv::Mat img_gray;	
+	Mat img_gray;	
 	if (img_byte.channels() == 1) {
 		img_gray = img_byte;
 	} else if (img_byte.channels() == 3 || img_byte.channels() == 4) {
 		cv::cvtColor(img_byte, img_gray, CV_RGB2GRAY);
-	} 
+	} 	
 
+	// threshold calculation: mean of 3x3 neighbors	
+	Mat img_mu, img_mct;
+	blur(img_gray, img_mu, Size(3,3));
+
+
+	img_mct = Mat::zeros(img_gray.rows-2, img_gray.cols-2, CV_16U);
+	for(int i=1;i<img_gray.rows-1;i++) {
+		for(int j=1;j<img_gray.cols-1;j++) {
+			
+			float threshold = img_mu.at<float>(i,j);
+			
+			// compute MCT value
+			// According to the following order of the binary position the decimal number is calculated
+			// 1 2 3 
+			// 8 9 4
+			// 7 6 5
+			int mct_result = 0;
+			if (img_gray.at<float>(i-1,j-1) > threshold){mct_result += 1;}   //1
+			if (img_gray.at<float>(i-1,j) > threshold){mct_result += 2;}     //2
+			if (img_gray.at<float>(i-1,j+1) > threshold) {mct_result += 4;}  //3
+			if (img_gray.at<float>(i,j+1) > threshold){mct_result += 8;}     //4
+			if (img_gray.at<float>(i+1,j+1) > threshold){mct_result += 16;}  //5                 
+			if (img_gray.at<float>(i+1,j) > threshold){mct_result += 32;}    //6                  
+			if (img_gray.at<float>(i+1,j-1) > threshold){mct_result += 64;}  //7               
+			if (img_gray.at<float>(i,j-1) > threshold){mct_result += 128;}   //8
+			if (img_gray.at<float>(i,j) > threshold){mct_result += 256;}     //9
+
+			img_mct.at<unsigned short>(i-1,j-1) = mct_result;
+			
+
+		}
+	}
+
+	// create histogram
 	feature_buffer_.clear();
-    feature_buffer_.resize(256, 0.0);
-    for (int ii = 0; ii < img_gray.rows; ++ii)
+    feature_buffer_.resize(512, 0.0);
+    for (int ii = 0; ii < img_mct.rows; ++ii)
     {
-        for (int jj = 0; jj < img_gray.cols; ++jj)
+        for (int jj = 0; jj < img_mct.cols; ++jj)
         {
-            ++feature_buffer_[(int)img_gray.at<uchar>(ii,jj)];
+            ++feature_buffer_[(int)img_mct.at<unsigned short>(ii,jj)];
         }
     }
 
     return feature_buffer_;
+	
 }
 
 
 
-double GrayValueHistogram::distance(const OutputType &f1,
+double ModCensusPattern::distance(const OutputType &f1,
                                     const OutputType &f2) const
 {
     return dist_->compute(f1, f2);
@@ -63,7 +95,7 @@ double GrayValueHistogram::distance(const OutputType &f1,
 
 
 
-bool GrayValueHistogram::writeToFile(const string &fname) const
+bool ModCensusPattern::writeToFile(const string &fname) const
 {
     ofstream ofs(fname.c_str());
     if (!ofs.is_open())
@@ -84,7 +116,7 @@ bool GrayValueHistogram::writeToFile(const string &fname) const
 
 
 
-bool GrayValueHistogram::readFromFile(const string &fname)
+bool ModCensusPattern::readFromFile(const string &fname)
 {
     ifstream ifs(fname.c_str());
     if (!ifs.is_open())
@@ -104,7 +136,6 @@ bool GrayValueHistogram::readFromFile(const string &fname)
     ifs.close();
     return true;
 }
-
 
 
 #ifdef HAVE_MATLAB
@@ -129,7 +160,7 @@ void mexFunction(int nOutput, mxArray* output[], int nInput, const mxArray* inpu
         if (nOutput != 1)
             mexErrMsgTxt("New: One output expected.");
         // Return a handle to a new C++ instance
-        output[0] = convertPtr2Mat<GrayValueHistogram>(new GrayValueHistogram);
+        output[0] = convertPtr2Mat<ModCensusPattern>(new ModCensusPattern);
         return;
     }
     
@@ -140,7 +171,7 @@ void mexFunction(int nOutput, mxArray* output[], int nInput, const mxArray* inpu
     // Delete
     if (!strcmp("delete", cmd)) {
         // Destroy the C++ object
-        destroyObject<GrayValueHistogram>(input[1]);
+        destroyObject<ModCensusPattern>(input[1]);
         // Warn if other commands were ignored
         if (nOutput != 0 || nInput != 2)
             mexWarnMsgTxt("Delete: Unexpected arguments ignored.");
@@ -148,7 +179,7 @@ void mexFunction(int nOutput, mxArray* output[], int nInput, const mxArray* inpu
     }
     
     // Get the class instance pointer from the second input
-    GrayValueHistogram* GrayValueHistogram_instance = convertMat2Ptr<GrayValueHistogram>(input[1]);
+    ModCensusPattern* ModCensusPattern_instance = convertMat2Ptr<ModCensusPattern>(input[1]);
     
     //// Call the various class methods
     // Compute    
@@ -165,7 +196,7 @@ void mexFunction(int nOutput, mxArray* output[], int nInput, const mxArray* inpu
 		cv::Mat image(args[2].toMat());
 			
         //// Call the method
-        GrayValueHistogram::OutputType feature = GrayValueHistogram_instance->compute(image);	
+        ModCensusPattern::OutputType feature = ModCensusPattern_instance->compute(image);	
 		
 		//// process method results, conversion from C++ datatypes to Matlab datatypes		
         output[0] = mxCreateDoubleMatrix(1, feature.size(), mxREAL);
@@ -190,7 +221,7 @@ void mexFunction(int nOutput, mxArray* output[], int nInput, const mxArray* inpu
 		
 		// Get the features from the input data
 		// first feature
-		GrayValueHistogram::OutputType ft1;		
+		ModCensusPattern::OutputType ft1;		
 		double* ft1Data =  mxGetPr(input[2]);
 		int nCols = mxGetN(input[2]); // Gives the number of Columns
 		int nRows = mxGetM(input[2]); // Gives the number of Rows
@@ -201,7 +232,7 @@ void mexFunction(int nOutput, mxArray* output[], int nInput, const mxArray* inpu
 			}
 		}
 		// second feature
-		GrayValueHistogram::OutputType ft2;		
+		ModCensusPattern::OutputType ft2;		
 		double* ft2Data =  mxGetPr(input[3]);
 		nCols = mxGetN(input[3]); // Gives the number of Columns
 		nRows = mxGetM(input[3]); // Gives the number of Rows
@@ -213,7 +244,7 @@ void mexFunction(int nOutput, mxArray* output[], int nInput, const mxArray* inpu
 		}
 		
         //// Call the method
-        double distance = GrayValueHistogram_instance->distance(ft1, ft2);
+        double distance = ModCensusPattern_instance->distance(ft1, ft2);
 				
 		//// process method results, conversion from c++ datatypes to matlab datatypes	
         output[0] = mxCreateDoubleMatrix(1, 1, mxREAL);
@@ -236,7 +267,7 @@ void mexFunction(int nOutput, mxArray* output[], int nInput, const mxArray* inpu
 		}
 					
         //// Call the method
-        bool successful = GrayValueHistogram_instance->writeToFile(path);			
+        bool successful = ModCensusPattern_instance->writeToFile(path);			
 		
 		//// convert results, conversion from C++ datatypes to Matlab datatypes		
 		int dims[2] = {1,1};
@@ -263,7 +294,7 @@ void mexFunction(int nOutput, mxArray* output[], int nInput, const mxArray* inpu
 		}
 					
         //// Call the method
-        bool successful = GrayValueHistogram_instance->readFromFile(path);			
+        bool successful = ModCensusPattern_instance->readFromFile(path);			
 		
 		//// convert results, conversion from C++ datatypes to Matlab datatypes		
 		int dims[2] = {1,1};

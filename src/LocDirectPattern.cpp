@@ -1,6 +1,6 @@
-#include "features/GrayValueHistogram.h"
+#include "features/LocDirectPattern.h"
 
-#include <fstream>
+
 
 typedef unsigned char uchar;
 
@@ -9,20 +9,19 @@ using namespace std;
 
 
 
-
-GrayValueHistogram::GrayValueHistogram()
+LocDirectPattern::LocDirectPattern() 
 {
     dist_ = new EuclideanDistance<vector<double> >();
+
 }
 
 
-
-GrayValueHistogram::~GrayValueHistogram()
+LocDirectPattern::~LocDirectPattern()
 {}
 
 
 
-GrayValueHistogram::OutputType GrayValueHistogram::compute(const cv::Mat &img)
+LocDirectPattern::OutputType LocDirectPattern::compute(const cv::Mat &img)
 {
 	// adjust data type
 	cv::Mat img_byte;
@@ -31,31 +30,122 @@ GrayValueHistogram::OutputType GrayValueHistogram::compute(const cv::Mat &img)
 	} else {
 		img_byte = img;
 	}
-
 	// adjust color space
 	cv::Mat img_gray;	
 	if (img_byte.channels() == 1) {
 		img_gray = img_byte;
 	} else if (img_byte.channels() == 3 || img_byte.channels() == 4) {
 		cv::cvtColor(img_byte, img_gray, CV_RGB2GRAY);
-	} 
+	} 	
+	
+	// Mapping of 256 to 56 histogram bins
+	int mapp_arr[56] = {7,11,13,14,19,21,22,25,26,28,35,37,38,41,42,44,49,50,52,56,67,69,70,73,74,76,81,82,84,88,97,98,100,104,112,131,133,134,137,138,140,145,146,148,152,161,162,164,168,176,193,194,196,200,208,224};
+	
+	// define Kirsch kernels
+	int ddepth = CV_32F;
+	int kernel_size = 3;
 
-	feature_buffer_.clear();
-    feature_buffer_.resize(256, 0.0);
+	float m1[3][3] = {{-3, -3, 5}, {-3, 0, 5}, {-3, -3, 5}}; //East
+	cv::Mat kernel1 = cv::Mat(kernel_size, kernel_size, ddepth, m1);
+	float m2[3][3] = {{-3, 5, 5}, {-3, 0, 5}, {-3, -3, -3}}; //North East
+	cv::Mat kernel2 = cv::Mat(kernel_size, kernel_size, ddepth, m2);
+	float m3[3][3] = {{5, 5, 5}, {-3, 0, -3}, {-3, -3, -3}}; //North
+	cv::Mat kernel3 = cv::Mat(kernel_size, kernel_size, ddepth, m3);
+	float m4[3][3] = {{5, 5, -3}, {5, 0, -3}, {-3, -3, -3}}; //North West
+	cv::Mat kernel4 = cv::Mat(kernel_size, kernel_size, ddepth, m4);
+	float m5[3][3] = {{5, -3, -3}, {5, 0, -3}, {5, -3, -3}}; //West
+	cv::Mat kernel5 = cv::Mat(kernel_size, kernel_size, ddepth, m5);
+	float m6[3][3] = {{-3, -3, -3}, {5, 0, -3}, {5, 5, -3}}; //South-West
+	cv::Mat kernel6 = cv::Mat(kernel_size, kernel_size, ddepth, m6);
+	float m7[3][3] = {{-3, -3, -3}, {-3, 0, -3}, {5, 5, 5}}; //South
+	cv::Mat kernel7 = cv::Mat(kernel_size, kernel_size, ddepth, m7);
+	float m8[3][3] = {{-3, -3, -3}, {-3, 0, 5}, {-3, 5, 5}}; //South East
+	cv::Mat kernel8 = cv::Mat(kernel_size, kernel_size, ddepth, m8);
+	
+	// handle for filtered images
+	cv::Mat fimg1; 
+	cv::Mat fimg2; 
+	cv::Mat fimg3; 
+	cv::Mat fimg4; 
+	cv::Mat fimg5; 
+	cv::Mat fimg6; 
+	cv::Mat fimg7; 
+	cv::Mat fimg8; 
+	
+	// filtering img with Kirsch masks then show results
+	cv::Point anchor = (-1,-1);
+	int delta = 0;
+
+	cv::filter2D(img_gray, fimg1, ddepth, kernel1, anchor, delta);
+	cv::filter2D(img_gray, fimg2, ddepth, kernel2, anchor, delta);
+	cv::filter2D(img_gray, fimg3, ddepth, kernel3, anchor, delta);
+	cv::filter2D(img_gray, fimg4, ddepth, kernel4, anchor, delta);
+	cv::filter2D(img_gray, fimg5, ddepth, kernel5, anchor, delta);
+	cv::filter2D(img_gray, fimg6, ddepth, kernel6, anchor, delta);
+	cv::filter2D(img_gray, fimg7, ddepth, kernel7, anchor, delta);
+	cv::filter2D(img_gray, fimg8, ddepth, kernel8, anchor, delta);	
+	
+	// Find for each pixel 3 top edge reponse values and compute decimal LDP representation
+	int sz[] = {8};
+	cv::Mat all_kirschval(1, sz, CV_32F, cv::Scalar::all(0)), sort_kirschval; 
+	cv::Mat img_pattern(img.rows, img.cols, CV_8U);
+		 
+	for (int ii = 0; ii < fimg1.rows; ii++)
+    {
+		for (int jj = 0; jj < fimg1.cols; jj++)
+        {
+			// get 8 edge response values
+			all_kirschval.at<float>(0) = fimg1.at<float>(ii,jj);		
+			all_kirschval.at<float>(1) = fimg2.at<float>(ii,jj);
+			all_kirschval.at<float>(2) = fimg3.at<float>(ii,jj); 
+			all_kirschval.at<float>(3) = fimg4.at<float>(ii,jj);
+			all_kirschval.at<float>(4) = fimg5.at<float>(ii,jj);
+			all_kirschval.at<float>(5) = fimg6.at<float>(ii,jj);
+			all_kirschval.at<float>(6) = fimg7.at<float>(ii,jj);
+			all_kirschval.at<float>(7) = fimg8.at<float>(ii,jj);
+			
+			// sort values
+			cv::sortIdx(all_kirschval, sort_kirschval, CV_SORT_EVERY_COLUMN + CV_SORT_ASCENDING);									
+			
+			// get top values
+			int top1 = sort_kirschval.at<int>(0,0);
+			int top2 = sort_kirschval.at<int>(1,0);
+			int top3 = sort_kirschval.at<int>(2,0);					
+			
+			// convert LDP feature to decimal number
+			float pattern_val = pow(float(2), top1) + pow(float(2), top2) + pow(float(2), top3);
+			
+			// create matrix with LDP values
+			img_pattern.at<uchar>(ii,jj) = int(pattern_val);								
+						
+       }
+    }
+
+	// create histogram 
+	std::vector<int> buffer_all;
+	buffer_all.resize(256,0.0);
+		
     for (int ii = 0; ii < img_gray.rows; ++ii)
     {
         for (int jj = 0; jj < img_gray.cols; ++jj)
         {
-            ++feature_buffer_[(int)img_gray.at<uchar>(ii,jj)];
+            ++buffer_all[(int)img_pattern.at<uchar>(ii,jj)];
         }
     }
+	feature_buffer_.clear();
+	feature_buffer_.resize(56, 0.0);
+	for (int kk = 0; kk < 56; ++kk)
+	{
+		int mappvar = mapp_arr[kk];
+		feature_buffer_[kk] = buffer_all[mappvar];
+	}
 
     return feature_buffer_;
 }
 
 
 
-double GrayValueHistogram::distance(const OutputType &f1,
+double LocDirectPattern::distance(const OutputType &f1,
                                     const OutputType &f2) const
 {
     return dist_->compute(f1, f2);
@@ -63,7 +153,7 @@ double GrayValueHistogram::distance(const OutputType &f1,
 
 
 
-bool GrayValueHistogram::writeToFile(const string &fname) const
+bool LocDirectPattern::writeToFile(const string &fname) const
 {
     ofstream ofs(fname.c_str());
     if (!ofs.is_open())
@@ -84,7 +174,7 @@ bool GrayValueHistogram::writeToFile(const string &fname) const
 
 
 
-bool GrayValueHistogram::readFromFile(const string &fname)
+bool LocDirectPattern::readFromFile(const string &fname)
 {
     ifstream ifs(fname.c_str());
     if (!ifs.is_open())
@@ -129,7 +219,7 @@ void mexFunction(int nOutput, mxArray* output[], int nInput, const mxArray* inpu
         if (nOutput != 1)
             mexErrMsgTxt("New: One output expected.");
         // Return a handle to a new C++ instance
-        output[0] = convertPtr2Mat<GrayValueHistogram>(new GrayValueHistogram);
+        output[0] = convertPtr2Mat<LocDirectPattern>(new LocDirectPattern);
         return;
     }
     
@@ -140,7 +230,7 @@ void mexFunction(int nOutput, mxArray* output[], int nInput, const mxArray* inpu
     // Delete
     if (!strcmp("delete", cmd)) {
         // Destroy the C++ object
-        destroyObject<GrayValueHistogram>(input[1]);
+        destroyObject<LocDirectPattern>(input[1]);
         // Warn if other commands were ignored
         if (nOutput != 0 || nInput != 2)
             mexWarnMsgTxt("Delete: Unexpected arguments ignored.");
@@ -148,7 +238,7 @@ void mexFunction(int nOutput, mxArray* output[], int nInput, const mxArray* inpu
     }
     
     // Get the class instance pointer from the second input
-    GrayValueHistogram* GrayValueHistogram_instance = convertMat2Ptr<GrayValueHistogram>(input[1]);
+    LocDirectPattern* LocDirectPattern_instance = convertMat2Ptr<LocDirectPattern>(input[1]);
     
     //// Call the various class methods
     // Compute    
@@ -165,7 +255,7 @@ void mexFunction(int nOutput, mxArray* output[], int nInput, const mxArray* inpu
 		cv::Mat image(args[2].toMat());
 			
         //// Call the method
-        GrayValueHistogram::OutputType feature = GrayValueHistogram_instance->compute(image);	
+        LocDirectPattern::OutputType feature = LocDirectPattern_instance->compute(image);	
 		
 		//// process method results, conversion from C++ datatypes to Matlab datatypes		
         output[0] = mxCreateDoubleMatrix(1, feature.size(), mxREAL);
@@ -190,7 +280,7 @@ void mexFunction(int nOutput, mxArray* output[], int nInput, const mxArray* inpu
 		
 		// Get the features from the input data
 		// first feature
-		GrayValueHistogram::OutputType ft1;		
+		LocDirectPattern::OutputType ft1;		
 		double* ft1Data =  mxGetPr(input[2]);
 		int nCols = mxGetN(input[2]); // Gives the number of Columns
 		int nRows = mxGetM(input[2]); // Gives the number of Rows
@@ -201,7 +291,7 @@ void mexFunction(int nOutput, mxArray* output[], int nInput, const mxArray* inpu
 			}
 		}
 		// second feature
-		GrayValueHistogram::OutputType ft2;		
+		LocDirectPattern::OutputType ft2;		
 		double* ft2Data =  mxGetPr(input[3]);
 		nCols = mxGetN(input[3]); // Gives the number of Columns
 		nRows = mxGetM(input[3]); // Gives the number of Rows
@@ -213,7 +303,7 @@ void mexFunction(int nOutput, mxArray* output[], int nInput, const mxArray* inpu
 		}
 		
         //// Call the method
-        double distance = GrayValueHistogram_instance->distance(ft1, ft2);
+        double distance = LocDirectPattern_instance->distance(ft1, ft2);
 				
 		//// process method results, conversion from c++ datatypes to matlab datatypes	
         output[0] = mxCreateDoubleMatrix(1, 1, mxREAL);
@@ -236,7 +326,7 @@ void mexFunction(int nOutput, mxArray* output[], int nInput, const mxArray* inpu
 		}
 					
         //// Call the method
-        bool successful = GrayValueHistogram_instance->writeToFile(path);			
+        bool successful = LocDirectPattern_instance->writeToFile(path);			
 		
 		//// convert results, conversion from C++ datatypes to Matlab datatypes		
 		int dims[2] = {1,1};
@@ -263,7 +353,7 @@ void mexFunction(int nOutput, mxArray* output[], int nInput, const mxArray* inpu
 		}
 					
         //// Call the method
-        bool successful = GrayValueHistogram_instance->readFromFile(path);			
+        bool successful = LocDirectPattern_instance->readFromFile(path);			
 		
 		//// convert results, conversion from C++ datatypes to Matlab datatypes		
 		int dims[2] = {1,1};
@@ -281,3 +371,5 @@ void mexFunction(int nOutput, mxArray* output[], int nInput, const mxArray* inpu
     mexErrMsgTxt("Command not recognized.");
 }
 #endif
+
+
