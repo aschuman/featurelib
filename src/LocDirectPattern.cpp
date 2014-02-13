@@ -38,7 +38,7 @@ LocDirectPattern::OutputType LocDirectPattern::compute(const cv::Mat &img)
 		cv::cvtColor(img_byte, img_gray, CV_RGB2GRAY);
 	} 	
 	
-	// Mapping of 256 to 56 histogram bins
+	// mapping of 256 histogram bins to 56 
 	int mapp_arr[56] = {7,11,13,14,19,21,22,25,26,28,35,37,38,41,42,44,49,50,52,56,67,69,70,73,74,76,81,82,84,88,97,98,100,104,112,131,133,134,137,138,140,145,146,148,152,161,162,164,168,176,193,194,196,200,208,224};
 	
 	// define Kirsch kernels
@@ -72,20 +72,17 @@ LocDirectPattern::OutputType LocDirectPattern::compute(const cv::Mat &img)
 	cv::Mat fimg7; 
 	cv::Mat fimg8; 
 	
-	// filtering img with Kirsch masks then show results
-	cv::Point anchor = (-1,-1);
-	int delta = 0;
-
-	cv::filter2D(img_gray, fimg1, ddepth, kernel1, anchor, delta);
-	cv::filter2D(img_gray, fimg2, ddepth, kernel2, anchor, delta);
-	cv::filter2D(img_gray, fimg3, ddepth, kernel3, anchor, delta);
-	cv::filter2D(img_gray, fimg4, ddepth, kernel4, anchor, delta);
-	cv::filter2D(img_gray, fimg5, ddepth, kernel5, anchor, delta);
-	cv::filter2D(img_gray, fimg6, ddepth, kernel6, anchor, delta);
-	cv::filter2D(img_gray, fimg7, ddepth, kernel7, anchor, delta);
-	cv::filter2D(img_gray, fimg8, ddepth, kernel8, anchor, delta);	
+	// filtering img with Kirsch masks
+	cv::filter2D(img_gray, fimg1, ddepth, kernel1);
+	cv::filter2D(img_gray, fimg2, ddepth, kernel2);
+	cv::filter2D(img_gray, fimg3, ddepth, kernel3);
+	cv::filter2D(img_gray, fimg4, ddepth, kernel4);
+	cv::filter2D(img_gray, fimg5, ddepth, kernel5);
+	cv::filter2D(img_gray, fimg6, ddepth, kernel6);
+	cv::filter2D(img_gray, fimg7, ddepth, kernel7);
+	cv::filter2D(img_gray, fimg8, ddepth, kernel8);	
 	
-	// Find for each pixel 3 top edge reponse values and compute decimal LDP representation
+	// find for each pixel 3 top edge reponse values and compute decimal LDP representation
 	int sz[] = {8};
 	cv::Mat all_kirschval(1, sz, CV_32F, cv::Scalar::all(0)), sort_kirschval; 
 	cv::Mat img_pattern(img.rows, img.cols, CV_8U);
@@ -112,7 +109,7 @@ LocDirectPattern::OutputType LocDirectPattern::compute(const cv::Mat &img)
 			int top2 = sort_kirschval.at<int>(1,0);
 			int top3 = sort_kirschval.at<int>(2,0);					
 			
-			// convert LDP feature to decimal number
+			// convert LDP feature value to decimal number
 			float pattern_val = pow(float(2), top1) + pow(float(2), top2) + pow(float(2), top3);
 			
 			// create matrix with LDP values
@@ -133,6 +130,8 @@ LocDirectPattern::OutputType LocDirectPattern::compute(const cv::Mat &img)
         }
     }
 	feature_buffer_.clear();
+
+	// map to histogram with 56 bins
 	feature_buffer_.resize(56, 0.0);
 	for (int kk = 0; kk < 56; ++kk)
 	{

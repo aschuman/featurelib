@@ -41,14 +41,13 @@ ModCensusPattern::OutputType ModCensusPattern::compute(const cv::Mat &img)
 	Mat img_mu, img_mct;
 	blur(img_gray, img_mu, Size(3,3));
 
-
+	// compute MCT value
 	img_mct = Mat::zeros(img_gray.rows-2, img_gray.cols-2, CV_16U);
 	for(int i=1;i<img_gray.rows-1;i++) {
 		for(int j=1;j<img_gray.cols-1;j++) {
 			
 			float threshold = img_mu.at<float>(i,j);
 			
-			// compute MCT value
 			// According to the following order of the binary position the decimal number is calculated
 			// 1 2 3 
 			// 8 9 4
